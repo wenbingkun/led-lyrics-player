@@ -1,0 +1,21 @@
+# Media Content
+lyrics/
+mp3/
+raw_audio/
+
+# Tools & Binaries
+bbdown_tool
+*.zip
+*.tar.gz
+
+# System & Misc
+.DS_Store
+Thumbs.db
+*.log
+tmp/
+
+# User Data (Optional, based on "non-code files")
+# keeping songs.txt and urls.txt as they are small config/list files, 
+# but if you want them ignored, uncomment lines below:
+# songs.txt
+# urls.txt
