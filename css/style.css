@@ -1157,3 +1157,53 @@ body.auto-hide-cursor {
         font-size: 3rem;
     }
 }
+
+/* 移动端适配 */
+@media (max-width: 480px) {
+    /* 歌词尺寸调整 */
+    .current-lyric {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+    }
+    .next-lyric {
+        font-size: 1.5rem;
+    }
+    .song-title {
+        font-size: 1.2rem;
+    }
+
+    /* 控制面板全宽 */
+    .control-panel {
+        width: 100vw;
+        max-height: 80vh;
+        bottom: 0;
+        right: 0;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%); /* 移动端改为从底部滑出 */
+    }
+
+    .control-panel:hover,
+    .control-panel.active {
+        transform: translateY(0);
+    }
+
+    /* 触发区域调整 */
+    .trigger-zone {
+        width: 100%;
+        height: 60px;
+        bottom: 0;
+    }
+
+    /* 播放按钮尺寸适应 */
+    .play-button {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+    
+    /* 隐藏部分非核心控件或调整布局 */
+    .speed-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}

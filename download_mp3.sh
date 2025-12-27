@@ -14,6 +14,13 @@ if [ ! -f ./bbdown_tool ]; then
     exit 1
 fi
 
+# 检查 ffmpeg 是否存在
+if ! command -v ffmpeg &> /dev/null; then
+    echo "错误：未找到 ffmpeg"
+    echo "请先安装 ffmpeg (如: sudo apt install ffmpeg)"
+    exit 1
+fi
+
 # 创建目录
 mkdir -p mp3
 mkdir -p raw_audio
