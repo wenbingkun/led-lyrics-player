@@ -306,6 +306,58 @@ await test('syncWithAudio updates progress and lyrics on timeupdate', async () =
   player.updateLyricsDisplay = originalUpdateLyricsDisplay;
 });
 
+await test('loadAudioFiles updates current song mode when auto', async () => {
+  const originalAudio = globalThis.Audio;
+  const originalURL = globalThis.URL;
+
+  globalThis.URL = {
+    createObjectURL() {
+      return 'blob:audio';
+    },
+    revokeObjectURL() {}
+  };
+
+  globalThis.Audio = class {
+    constructor() {
+      this._listeners = new Map();
+      this.duration = 10;
+      this._src = '';
+    }
+
+    addEventListener(type, handler) {
+      if (!this._listeners.has(type)) {
+        this._listeners.set(type, []);
+      }
+      this._listeners.get(type).push(handler);
+    }
+
+    set src(value) {
+      this._src = value;
+    }
+  };
+
+  try {
+    let applyCalls = 0;
+    player.applyModeChange = () => { applyCalls += 1; };
+    player.updatePlaylist = () => {};
+    player.showNotification = () => {};
+
+    player.songs = [{
+      name: 'song',
+      lyrics: [{ time: 0, text: 'a' }],
+      duration: 1,
+      userMode: 'auto'
+    }];
+    player.currentSongIndex = 0;
+
+    player.loadAudioFiles([{ name: 'song.mp3' }]);
+
+    assert.equal(applyCalls, 1);
+  } finally {
+    globalThis.Audio = originalAudio;
+    globalThis.URL = originalURL;
+  }
+});
 await test('seek updates time and progress', () => {
   player.seek = LEDLyricsPlayer.prototype.seek.bind(player);
   player.setCurrentTime = LEDLyricsPlayer.prototype.setCurrentTime.bind(player);
@@ -408,6 +460,7 @@ await test('keyboard shortcuts trigger expected actions', async () => {
   let switchPlayModeCalls = 0;
   let adjustOffsetCalls = 0;
   let switchToSongCalls = 0;
+  let cycleModeCalls = 0;
   let focusCalls = 0;
 
   elements.lyricsSearch.focus = () => { focusCalls += 1; };
@@ -434,6 +487,7 @@ await test('keyboard shortcuts trigger expected actions', async () => {
   player.switchPlayMode = () => { switchPlayModeCalls += 1; };
   player.adjustOffset = () => { adjustOffsetCalls += 1; };
   player.switchToSong = () => { switchToSongCalls += 1; };
+  player.cycleSongMode = () => { cycleModeCalls += 1; };
 
   player.initEventListeners();
 
@@ -455,6 +509,8 @@ await test('keyboard shortcuts trigger expected actions', async () => {
   assert.ok(trigger({ code: 'ArrowRight' }));
   assert.ok(trigger({ code: 'ArrowUp' }));
   assert.ok(trigger({ code: 'ArrowDown' }));
+  assert.ok(trigger({ key: 'p' }));
+  assert.ok(trigger({ key: 'n' }));
   assert.ok(trigger({ code: 'ArrowLeft', ctrlKey: true }));
   assert.ok(trigger({ code: 'ArrowRight', ctrlKey: true }));
   assert.ok(trigger({ code: 'ArrowUp', ctrlKey: true }));
@@ -465,14 +521,15 @@ await test('keyboard shortcuts trigger expected actions', async () => {
   trigger({ key: 't' });
   trigger({ key: 'm' });
   trigger({ key: 'f' });
+  trigger({ key: 'c' });
   trigger({ key: '[' });
   trigger({ key: ']' });
   trigger({ code: 'Digit1' });
 
   assert.equal(playCalls >= 2, true);
   assert.equal(seekCalls, 2);
-  assert.equal(prevSongCalls, 1);
-  assert.equal(nextSongCalls, 1);
+  assert.equal(prevSongCalls, 2);
+  assert.equal(nextSongCalls, 2);
   assert.equal(prevLyricCalls, 1);
   assert.equal(nextLyricCalls, 1);
   assert.equal(firstLyricCalls, 1);
@@ -483,6 +540,7 @@ await test('keyboard shortcuts trigger expected actions', async () => {
   assert.equal(switchPlayModeCalls, 1);
   assert.equal(adjustOffsetCalls, 2);
   assert.equal(switchToSongCalls, 1);
+  assert.equal(cycleModeCalls, 1);
   assert.equal(focusCalls, 1);
 
   globalThis.setTimeout = originalSetTimeout;

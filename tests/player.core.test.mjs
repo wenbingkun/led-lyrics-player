@@ -588,6 +588,7 @@ await test('processFolderFiles filters lyrics files and calls loadLrcFiles', asy
   player.loadLrcFiles = (files) => { receivedFiles = files; };
   player.sortPlaylist = () => {};
   player.updatePlaylist = () => {};
+  player.filterValidLyricFiles = async (files) => files;
 
   const files = [
     { name: '01-hello.lrc', webkitRelativePath: 'a/01-hello.lrc' },
@@ -595,7 +596,7 @@ await test('processFolderFiles filters lyrics files and calls loadLrcFiles', asy
     { name: '03-skip.mp3', webkitRelativePath: 'b/03-skip.mp3' }
   ];
 
-  player.processFolderFiles(files, 'lyrics');
+  await player.processFolderFiles(files, 'lyrics');
 
   assert.ok(receivedFiles);
   assert.equal(receivedFiles.length, 2);
@@ -669,6 +670,41 @@ await test('processFolderFiles warns when no valid files exist', () => {
 
   assert.equal(notifications.length, 1);
   assert.equal(notifications[0].type, 'warning');
+});
+
+await test('processFolderFiles filters invalid lyric content', async () => {
+  const originalFileReader = globalThis.FileReader;
+  const notifications = [];
+  let receivedFiles = null;
+
+  globalThis.FileReader = class {
+    constructor() {
+      this.onload = null;
+      this.onerror = null;
+    }
+
+    readAsText() {
+      this.onload({ target: { result: 'no timestamps here' } });
+    }
+  };
+
+  try {
+    player.showNotification = (message, type) => { notifications.push({ message, type }); };
+    player.loadLrcFiles = (files) => { receivedFiles = files; };
+    player.sortPlaylist = () => {};
+    player.updatePlaylist = () => {};
+
+    const files = [
+      { name: 'bad.lrc', webkitRelativePath: 'a/bad.lrc' }
+    ];
+
+    await player.processFolderFiles(files, 'lyrics');
+
+    assert.equal(receivedFiles, null);
+    assert.equal(notifications.at(-1).type, 'warning');
+  } finally {
+    globalThis.FileReader = originalFileReader;
+  }
 });
 
 await test('reorderSongs adjusts current index correctly', () => {

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LED演出歌词显示器</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -67,12 +68,15 @@
         </div>
 
         <div class="controls-row">
+            <button id="prevButton" class="control-button" disabled title="上一曲 (P)">⏮</button>
             <button id="playButton" class="play-button" disabled title="播放/暂停 (空格)">▶</button>
+            <button id="nextButton" class="control-button" disabled title="下一曲 (N)">⏭</button>
             <span id="currentTime" class="time-info">0:00</span>
             <div id="progressContainer" class="progress-container">
                 <div id="progressBar" class="progress-bar"></div>
             </div>
             <span id="totalTime" class="time-info">0:00</span>
+            <button id="modeToggleButton" class="control-button mode-toggle-button" disabled title="切换模式 (C)">🎶</button>
         </div>
 
         <div class="speed-controls">
