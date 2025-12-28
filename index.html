@@ -34,7 +34,44 @@
     <div class="trigger-zone" title="把鼠标移到这里显示控制台"></div>
 
     <div class="control-panel">
-        <div class="panel-title">LED 歌词控制台</div>
+        <div class="panel-header">
+            <div class="panel-title">LED 歌词控制台</div>
+            <button id="toggleResources" class="icon-button" title="资源管理">📂</button>
+        </div>
+        
+        <!-- 资源反馈提示 (新增) -->
+        <div id="loadedResourceHint" class="resource-hint"></div>
+
+        <!-- 可折叠的资源管理区 -->
+        <div id="resourcesPanel" class="resources-panel" style="display: none;">
+            <div class="file-upload-group">
+                <label class="upload-label">歌词文件 (.lrc/.txt)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="lrcFile" class="file-input" accept=".lrc,.txt" multiple>
+                    <button type="button" id="lrcFolderBtn" class="folder-button" title="选择歌词文件夹">📂</button>
+                </div>
+                <div id="lrcPathDisplay" class="path-display"></div>
+                <input type="file" id="lrcFolder" style="display: none;" webkitdirectory directory multiple>
+                <div id="lrcFolderHint" class="compatibility-hint" style="display: none;"></div>
+            </div>
+
+            <div class="file-upload-group">
+                <label class="upload-label">音频文件 (mp3/wav/flac...)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="audioFile" class="file-input" accept="audio/*,video/*" multiple>
+                    <button type="button" id="audioFolderBtn" class="folder-button" title="选择音频文件夹">📂</button>
+                </div>
+                <div id="audioPathDisplay" class="path-display"></div>
+                <input type="file" id="audioFolder" style="display: none;" webkitdirectory directory multiple>
+                <div id="audioFolderHint" class="compatibility-hint" style="display: none;"></div>
+            </div>
+
+            <div class="file-upload-group">
+                <label class="upload-label">背景图片</label>
+                <input type="file" id="backgroundFile" class="file-input" accept="image/*">
+                <div id="bgPathDisplay" class="path-display"></div>
+            </div>
+        </div>
 
         <div id="currentSongInfo" class="current-song-info" style="display: none;">
             <div id="currentSongName" class="current-song-name"></div>
@@ -42,112 +79,103 @@
             <div id="offsetDisplay" style="font-size: 12px; color: #aaa; margin-top: 4px;"></div>
         </div>
 
-        <div class="file-upload-group">
-            <label class="upload-label">歌词文件 (.lrc/.txt)</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="file" id="lrcFile" class="file-input" accept=".lrc,.txt" multiple>
-                <button type="button" id="lrcFolderBtn" class="folder-button" title="选择歌词文件夹">📂</button>
+        <!-- 核心播放控制区 (Hero Section) -->
+        <div class="playback-hero">
+            <!-- 进度条上移 -->
+            <div class="time-row">
+                <span id="currentTime" class="time-info">0:00</span>
+                <div id="progressContainer" class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <span id="totalTime" class="time-info">0:00</span>
             </div>
-            <input type="file" id="lrcFolder" style="display: none;" webkitdirectory directory multiple>
-            <div id="lrcFolderHint" class="compatibility-hint" style="display: none;"></div>
-        </div>
-
-        <div class="file-upload-group">
-            <label class="upload-label">音频文件 (mp3/wav/flac...)</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="file" id="audioFile" class="file-input" accept="audio/*,video/*" multiple>
-                <button type="button" id="audioFolderBtn" class="folder-button" title="选择音频文件夹">📂</button>
+            
+            <!-- 播放按钮居中放大 -->
+            <div class="controls-main">
+                <button id="playButton" class="play-button" disabled title="播放/暂停 (空格)">▶</button>
             </div>
-            <input type="file" id="audioFolder" style="display: none;" webkitdirectory directory multiple>
-            <div id="audioFolderHint" class="compatibility-hint" style="display: none;"></div>
         </div>
 
-        <div class="file-upload-group">
-            <label class="upload-label">背景图片</label>
-            <input type="file" id="backgroundFile" class="file-input" accept="image/*">
-        </div>
-
-        <div class="controls-row">
-            <button id="prevButton" class="control-button" disabled title="上一曲 (P)">⏮</button>
-            <button id="playButton" class="play-button" disabled title="播放/暂停 (空格)">▶</button>
-            <button id="nextButton" class="control-button" disabled title="下一曲 (N)">⏭</button>
-            <span id="currentTime" class="time-info">0:00</span>
-            <div id="progressContainer" class="progress-container">
-                <div id="progressBar" class="progress-bar"></div>
-            </div>
-            <span id="totalTime" class="time-info">0:00</span>
-            <button id="modeToggleButton" class="control-button mode-toggle-button" disabled title="切换模式 (C)">🎶</button>
-        </div>
-
-        <div class="speed-controls">
-            <button class="speed-button" data-speed="0.5">0.5x</button>
-            <button class="speed-button active" data-speed="1.0">1.0x</button>
-            <button class="speed-button" data-speed="1.5">1.5x</button>
-            <button class="speed-button" data-speed="2.0">2.0x</button>
-        </div>
-
-        <div class="speed-controls">
-            <button class="font-size-button" data-font-size="0.8">S</button>
-            <button class="font-size-button active" data-font-size="1.3">M</button>
-            <button class="font-size-button" data-font-size="1.8">L</button>
-            <button class="font-size-button" data-font-size="2.4">XL</button>
-            <button class="font-size-button" data-font-size="3.0">XXL</button>
-        </div>
-
-        <div class="speed-controls">
-            <button class="theme-button active" data-theme="classic" title="经典白 (T键切换)">⚪ 经典</button>
-            <button class="theme-button" data-theme="gold" title="流金岁月">🟡 流金</button>
-            <button class="theme-button" data-theme="blue" title="赛博蓝">🔵 赛博</button>
-            <button class="theme-button" data-theme="rainbow" title="炫彩霓虹">🌈 霓虹</button>
-        </div>
-
-        <div class="speed-controls">
-            <button class="play-mode-button active" data-mode="loop" title="列表循环">🔁</button>
-            <button class="play-mode-button" data-mode="list" title="列表播放">📋</button>
-            <button class="play-mode-button" data-mode="single" title="单曲循环">🔂</button>
-            <button class="play-mode-button" data-mode="random" title="随机播放">🔀</button>
-        </div>
-
-        <div class="speed-controls" style="margin-bottom: 5px;">
-            <input type="text" id="lyricsSearch" class="search-input" placeholder="搜索歌词内容... (F键)">
-            <button id="searchButton" class="search-button theme-button" title="搜索">🔍</button>
-            <button id="clearSearch" class="search-button theme-button" title="清除">✕</button>
-        </div>
-        <div id="searchResults" class="search-results" style="display: none;"></div>
-
-        <!-- 同步微调控制 -->
-        <div id="syncControls" class="speed-controls" style="margin-top: 15px; display: none;">
-            <div style="font-size: 12px; color: #aaa; margin-right: 10px;">同步微调:</div>
-            <button class="sync-button" data-offset="-1.0">-1s</button>
-            <button class="sync-button" data-offset="-0.1">-0.1s</button>
-            <button id="resetOffset" class="sync-button" title="重置偏移">0</button>
-            <button class="sync-button" data-offset="0.1">+0.1s</button>
-            <button class="sync-button" data-offset="1.0">+1s</button>
-        </div>
-
+        <!-- 播放列表区域 -->
         <div class="playlist-section">
+            <div class="playlist-toolbar">
+                <div class="search-box">
+                    <input type="text" id="lyricsSearch" class="search-input" placeholder="搜索... (F)">
+                    <button id="searchButton" class="icon-button small" title="搜索">🔍</button>
+                    <button id="clearSearch" class="icon-button small" title="清除">✕</button>
+                </div>
+                <div class="playlist-actions">
+                    <button id="sortPlaylist" class="icon-button" title="排序">AZ</button>
+                    <button id="importPlaylist" class="icon-button" title="导入">📥</button>
+                    <input type="file" id="playlistFile" style="display: none;" accept=".json">
+                    <button id="exportPlaylist" class="icon-button" title="导出">📤</button>
+                    <button id="clearPlaylist" class="icon-button danger" title="清空">🗑️</button>
+                </div>
+            </div>
+            
+            <div id="searchResults" class="search-results" style="display: none;"></div>
+
             <div class="playlist-header">
-                播放列表
                 <span id="playlistCount" class="playlist-count">0 首歌曲</span>
+                <!-- 播放模式放在列表头 -->
+                <div class="play-mode-toggle">
+                    <button class="play-mode-button active" data-mode="loop" title="列表循环">🔁</button>
+                    <button class="play-mode-button" data-mode="list" title="列表播放">📋</button>
+                    <button class="play-mode-button" data-mode="single" title="单曲循环">🔂</button>
+                    <button class="play-mode-button" data-mode="random" title="随机播放">🔀</button>
+                </div>
             </div>
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <button id="importPlaylist" class="playlist-action-btn" title="导入列表">📥</button>
-                <input type="file" id="playlistFile" style="display: none;" accept=".json">
-                <button id="exportPlaylist" class="playlist-action-btn" title="导出列表">📤</button>
-                <button id="sortPlaylist" class="playlist-action-btn" title="按名称排序">AZ</button>
-                <div style="flex: 1;"></div>
-                <button id="clearPlaylist" class="playlist-action-btn" title="清空列表"
-                    style="color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">🗑️</button>
-            </div>
+
             <div id="playlist" class="playlist">
                 <div class="empty-playlist">还没有歌曲，请上传LRC文件</div>
             </div>
         </div>
 
-        <div style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.3); font-size: 11px;">
-            支持LRC歌词和MP3/WAV等音频格式<br>
-            双击播放 • 拖拽排序 • 空格暂停<br>
-            数字键1-9快速选歌 • 左右键快进
+        <!-- 同步微调 (Contextual) -->
+        <div id="syncControls" class="sync-controls-panel" style="display: none;">
+            <span class="control-label">同步微调</span>
+            <div class="segmented-control">
+                <button class="sync-button" data-offset="-0.5">◄</button>
+                <button class="sync-button" data-offset="-0.1">-0.1s</button>
+                <button id="resetOffset" class="sync-button reset">0</button>
+                <button class="sync-button" data-offset="0.1">+0.1s</button>
+                <button class="sync-button" data-offset="0.5">►</button>
+            </div>
+        </div>
+
+        <!-- 外观设置 (底部) -->
+        <div class="settings-section">
+            <div class="setting-row">
+                <span class="setting-label">速度</span>
+                <div class="segmented-control">
+                    <button class="speed-button" data-speed="0.5">0.5</button>
+                    <button class="speed-button active" data-speed="1.0">1.0</button>
+                    <button class="speed-button" data-speed="1.5">1.5</button>
+                    <button class="speed-button" data-speed="2.0">2.0</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">字号</span>
+                <div class="segmented-control">
+                    <button class="font-size-button" data-font-size="0.8">S</button>
+                    <button class="font-size-button active" data-font-size="1.3">M</button>
+                    <button class="font-size-button" data-font-size="1.8">L</button>
+                    <button class="font-size-button" data-font-size="2.4">XL</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">主题</span>
+                <div class="segmented-control theme-selector">
+                    <button class="theme-button active" data-theme="classic" title="经典">⚪</button>
+                    <button class="theme-button" data-theme="gold" title="流金">🟡</button>
+                    <button class="theme-button" data-theme="blue" title="赛博">🔵</button>
+                    <button class="theme-button" data-theme="rainbow" title="霓虹">🌈</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-hint">
+            双击播放 • 空格暂停 • 拖拽排序
         </div>
     </div>
 

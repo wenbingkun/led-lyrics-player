@@ -85,6 +85,49 @@ export class LEDLyricsPlayer {
 
         // 初始化控制台交互 (点击锁定)
         this.initPanelInteraction();
+        this.initResourcePanel();
+    }
+
+    // 初始化资源面板交互
+    initResourcePanel() {
+        const toggleBtn = document.getElementById('toggleResources');
+        const panel = document.getElementById('resourcesPanel');
+        
+        if (toggleBtn && panel) {
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = panel.style.display === 'none';
+                panel.style.display = isHidden ? 'flex' : 'none';
+                // 切换图标或状态
+                toggleBtn.classList.toggle('active', isHidden);
+            });
+        }
+    }
+
+    updatePathDisplay(id, text, type = 'file') {
+        const displayEl = document.getElementById(id);
+        if (displayEl) {
+            const icon = type === 'folder' ? '📁' : '📄';
+            displayEl.textContent = `${icon} ${text}`;
+            displayEl.style.display = 'block';
+        }
+    }
+
+    showResourceFeedback(path, type = 'file') {
+        const hintEl = document.getElementById('loadedResourceHint');
+        if (hintEl) {
+            const icon = type === 'folder' ? '📁' : ' 已加载';
+            hintEl.textContent = `${icon}: ${path}`;
+            hintEl.style.display = 'block';
+            
+            // 3秒后淡出
+            setTimeout(() => {
+                hintEl.style.opacity = '0';
+                setTimeout(() => { 
+                    hintEl.textContent = ''; 
+                    hintEl.style.opacity = '1';
+                }, 500);
+            }, 3000);
+        }
     }
 
     // 防抖函数工具
@@ -386,6 +429,9 @@ export class LEDLyricsPlayer {
         if (lrcFile) lrcFile.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
             log('选择了', files.length, '个文件');
+            const text = `${files.length} 个歌词文件`;
+            this.updatePathDisplay('lrcPathDisplay', text, 'file');
+            this.showResourceFeedback(text, 'file');
             this.loadLrcFiles(files);
         });
 
@@ -393,6 +439,9 @@ export class LEDLyricsPlayer {
         if (audioFile) audioFile.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
             log('选择了', files.length, '个音频文件');
+            const text = `${files.length} 个音频文件`;
+            this.updatePathDisplay('audioPathDisplay', text, 'file');
+            this.showResourceFeedback(text, 'file');
             this.loadAudioFiles(files);
         });
 
@@ -401,6 +450,8 @@ export class LEDLyricsPlayer {
             const file = e.target.files[0];
             if (file) {
                 log('开始加载背景图片:', file.name);
+                this.updatePathDisplay('bgPathDisplay', file.name, 'file');
+                this.showResourceFeedback(file.name, 'file');
                 this.loadBackgroundImage(file);
             }
         });
@@ -415,6 +466,12 @@ export class LEDLyricsPlayer {
 
             lrcFolder.addEventListener('change', async (e) => {
                 const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    const path = files[0].webkitRelativePath || '';
+                    const folderName = path.split('/')[0] || '选中文件夹';
+                    this.updatePathDisplay('lrcPathDisplay', folderName, 'folder');
+                    this.showResourceFeedback(folderName, 'folder');
+                }
                 await this.processFolderFiles(files, 'lyrics');
             });
         }
@@ -428,6 +485,12 @@ export class LEDLyricsPlayer {
 
             audioFolder.addEventListener('change', async (e) => {
                 const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    const path = files[0].webkitRelativePath || '';
+                    const folderName = path.split('/')[0] || '选中文件夹';
+                    this.updatePathDisplay('audioPathDisplay', folderName, 'folder');
+                    this.showResourceFeedback(folderName, 'folder');
+                }
                 await this.processFolderFiles(files, 'audio');
             });
         }
