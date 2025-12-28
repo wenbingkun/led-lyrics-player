@@ -55,6 +55,19 @@ await test('parseLrc merges duplicate timestamps', () => {
   assert.equal(parsed[1].text, 'third');
 });
 
+await test('parseLrc applies offset metadata', () => {
+  const lrc = [
+    '[offset:1000]',
+    '[00:01.00]first',
+    '[00:02.00]second'
+  ].join('\n');
+
+  const parsed = player.parseLrc(lrc);
+  assert.equal(parsed.length, 2);
+  assert.equal(parsed[0].time, 2);
+  assert.equal(parsed[1].time, 3);
+});
+
 await test('normalizeForMatching strips prefixes and separators', () => {
   const normalized = player.normalizeForMatching('01_HeLLo-World.mp3');
   assert.equal(normalized, 'helloworld');

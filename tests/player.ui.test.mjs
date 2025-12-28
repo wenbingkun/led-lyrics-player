@@ -170,9 +170,9 @@ await test('searchLyrics populates results for matching lines', () => {
   player.songs = [{
     name: 'a',
     lyrics: [
+      { time: 3, text: 'hello again' },
       { time: 1, text: 'hello world' },
-      { time: 2, text: 'goodbye' },
-      { time: 3, text: 'hello again' }
+      { time: 2, text: 'goodbye' }
     ]
   }];
 
@@ -180,6 +180,8 @@ await test('searchLyrics populates results for matching lines', () => {
 
   assert.equal(searchResults.style.display, 'block');
   assert.equal(searchResults.children.length, 2);
+  assert.equal(player.searchResults[0].time, 1);
+  assert.equal(player.searchResults[1].time, 3);
 });
 
 await test('clearSearch hides and clears results', () => {

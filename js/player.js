@@ -867,9 +867,21 @@ parseLrc(lrcContent) {
 
     const lyrics = [];
     const lines = lrcContent.split('\n');
+        let offsetSeconds = 0;
 
     lines.forEach((line, index) => {
         try {
+            if (CONFIG.LRC.APPLY_OFFSET) {
+                const offsetMatch = line.match(/\[offset:([+-]?\d+)\]/i);
+                if (offsetMatch) {
+                    const offsetMs = parseInt(offsetMatch[1], 10);
+                    if (!isNaN(offsetMs)) {
+                        offsetSeconds = offsetMs / 1000;
+                    }
+                    return;
+                }
+            }
+
             const match = line.match(/\[(\d+):(\d+)(?:\.(\d+))?\](.*)/);
             if (match) {
                 const minutes = parseInt(match[1]);
@@ -881,7 +893,7 @@ parseLrc(lrcContent) {
                     throw new Error(`第${index + 1}行时间格式错误: ${line}`);
                 }
 
-                const time = minutes * 60 + seconds + centiseconds / 100;
+                const time = Math.max(0, minutes * 60 + seconds + centiseconds / 100 + offsetSeconds);
                 lyrics.push({ time, text: text || '♪' });
             }
         } catch (error) {
@@ -890,8 +902,11 @@ parseLrc(lrcContent) {
     });
 
     const sortedLyrics = lyrics.sort((a, b) => a.time - b.time);
-    const mergedLyrics = [];
+    if (!CONFIG.LRC.MERGE_DUPLICATES) {
+        return sortedLyrics;
+    }
 
+    const mergedLyrics = [];
     sortedLyrics.forEach(line => {
         const lastLine = mergedLyrics[mergedLyrics.length - 1];
         if (lastLine && Math.abs(lastLine.time - line.time) < 0.001) {
@@ -1826,9 +1841,11 @@ getNextSongIndex() {
             return;
         }
 
-    this.searchResults = lyrics.filter(line =>
-        line.text.toLowerCase().includes(query.toLowerCase())
-    );
+        const loweredQuery = query.toLowerCase();
+        this.searchResults = lyrics
+            .filter(line => line.text.toLowerCase().includes(loweredQuery))
+            .slice()
+            .sort((a, b) => a.time - b.time);
 
     this.displaySearchResults(this.searchResults, query);
 }
