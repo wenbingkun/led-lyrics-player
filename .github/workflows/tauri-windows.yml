@@ -1,0 +1,37 @@
+name: build-tauri-windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Prepare app assets
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force app | Out-Null
+          Copy-Item index.html -Destination app
+          Copy-Item css -Destination app -Recurse -Force
+          Copy-Item js -Destination app -Recurse -Force
+          if (Test-Path lyrics) { Copy-Item lyrics -Destination app -Recurse -Force }
+          if (Test-Path mp3) { Copy-Item mp3 -Destination app -Recurse -Force }
+
+      - name: Build Tauri (Windows)
+        shell: pwsh
+        run: cargo tauri build
+
+      - name: Upload bundle artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-windows-bundle
+          path: src-tauri/target/release/bundle/**
