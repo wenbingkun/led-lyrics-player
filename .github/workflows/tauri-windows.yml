@@ -1,10 +1,6 @@
 name: build-tauri-windows
 
 on:
-  push:
-    branches: [ master ]
-    tags:
-      - "v*"
   workflow_dispatch:
 
 permissions:
