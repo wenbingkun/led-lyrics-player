@@ -25,8 +25,7 @@ jobs:
           Copy-Item index.html -Destination app
           Copy-Item css -Destination app -Recurse -Force
           Copy-Item js -Destination app -Recurse -Force
-          if (Test-Path lyrics) { Copy-Item lyrics -Destination app -Recurse -Force }
-          if (Test-Path mp3) { Copy-Item mp3 -Destination app -Recurse -Force }
+          # Optional: lyrics/mp3 are user-provided and not bundled
 
       - name: Build Tauri (Windows)
         uses: tauri-apps/tauri-action@v0
