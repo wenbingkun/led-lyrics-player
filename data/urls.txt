@@ -1,7 +1,0 @@
-# 在下方粘贴 Bilibili 视频链接，每行一个
-# 支持视频链接 (https://www.bilibili.com/video/BV...)
-# 也支持合集/列表链接
-# 以 # 开头的行会被忽略
-
-# 示例:
-# https://www.bilibili.com/video/BV1xxxxxx
