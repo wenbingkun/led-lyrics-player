@@ -18,6 +18,9 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --locked
+
       - name: Prepare app assets
         shell: pwsh
         run: |
