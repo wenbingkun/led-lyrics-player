@@ -18,9 +18,6 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --locked
-
       - name: Prepare app assets
         shell: pwsh
         run: |
@@ -32,8 +29,11 @@ jobs:
           if (Test-Path mp3) { Copy-Item mp3 -Destination app -Recurse -Force }
 
       - name: Build Tauri (Windows)
-        shell: pwsh
-        run: cargo tauri build
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: build
 
       - name: Upload bundle artifacts
         uses: actions/upload-artifact@v4
