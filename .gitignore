@@ -7,6 +7,7 @@ raw_audio/
 bbdown_tool
 *.zip
 *.tar.gz
+app/
 
 # System & Misc
 .DS_Store
