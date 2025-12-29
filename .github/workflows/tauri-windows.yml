@@ -3,6 +3,8 @@ name: build-tauri-windows
 on:
   push:
     branches: [ master ]
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -31,6 +33,12 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "LED Lyrics Player ${{ github.ref_name }}"
+          releaseBody: "Automated release"
+          releaseDraft: false
+          releasePrerelease: false
 
       - name: Upload bundle artifacts
         uses: actions/upload-artifact@v4
