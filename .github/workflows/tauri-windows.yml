@@ -2,6 +2,11 @@ name: build-tauri-windows
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 0.1.1)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -19,6 +24,20 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Set release tag
+        shell: pwsh
+        run: |
+          $tag = "v${{ inputs.version }}"
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Update app version
+        shell: pwsh
+        run: |
+          $configPath = "src-tauri/tauri.conf.json"
+          $json = Get-Content $configPath -Raw | ConvertFrom-Json
+          $json.version = "${{ inputs.version }}"
+          $json | ConvertTo-Json -Depth 10 | Set-Content $configPath -NoNewline
+
       - name: Prepare app assets
         shell: pwsh
         run: |
@@ -28,20 +47,13 @@ jobs:
           Copy-Item js -Destination app -Recurse -Force
           # Optional: lyrics/mp3 are user-provided and not bundled
 
-      - name: Build Tauri (Windows)
+      - name: Build & Release
         uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-
-      - name: Build & Release (tagged)
-        uses: tauri-apps/tauri-action@v0
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "LED Lyrics Player ${{ github.ref_name }}"
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: "LED Lyrics Player ${{ env.RELEASE_TAG }}"
           releaseBody: "Automated release"
           releaseDraft: false
           releasePrerelease: false
