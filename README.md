@@ -66,12 +66,6 @@ python3 -m http.server 8000
 node --experimental-vm-modules tests/player.core.test.mjs
 ```
 
-## 📝 实用工具
-
-**`download_mp3.sh`**
-一个辅助脚本，用于从 `urls.txt` 中的 Bilibili 链接下载音频并自动转换为高质量 MP3。
-*依赖: `ffmpeg`, `bbdown_tool`*
-
 ---
 
 Designed with ❤️ for performers and music lovers.

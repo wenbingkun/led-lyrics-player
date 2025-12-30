@@ -1,6 +1,7 @@
 # Media Content
 lyrics/
 mp3/
+local_media/
 raw_audio/
 
 # Tools & Binaries
