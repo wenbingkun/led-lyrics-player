@@ -24,15 +24,13 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Set release tag
+      - name: Validate version format
         shell: pwsh
         run: |
           if ("${{ inputs.version }}" -notmatch '^\d+\.\d+\.\d+$') {
             Write-Error "Invalid version format. Expected x.y.z (e.g. 0.1.1)."
             exit 1
           }
-          $tag = "v${{ inputs.version }}"
-          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Update app version
         shell: pwsh
@@ -56,11 +54,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ env.RELEASE_TAG }}
-          releaseName: "LED Lyrics Player ${{ env.RELEASE_TAG }}"
+          tagName: v${{ inputs.version }}
+          releaseName: "LED Lyrics Player v${{ inputs.version }}"
           releaseBody: "Automated release"
           releaseDraft: false
-          releasePrerelease: false
+          prerelease: false
 
       - name: Upload bundle artifacts
         uses: actions/upload-artifact@v4
