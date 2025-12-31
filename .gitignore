@@ -19,6 +19,7 @@ tmp/
 # AI assistant notes
 AGENTS.md
 GEMINI.md
+CLAUDE.md
 
 # User Data (Optional, based on "non-code files")
 # keeping songs.txt and urls.txt as they are small config/list files, 
