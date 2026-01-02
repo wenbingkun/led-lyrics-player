@@ -86,48 +86,43 @@ export class LEDLyricsPlayer {
         // 初始化控制台交互 (点击锁定)
         this.initPanelInteraction();
         this.initResourcePanel();
+        this.initTabs();
     }
 
-    // 初始化资源面板交互
-    initResourcePanel() {
-        const toggleBtn = document.getElementById('toggleResources');
-        const panel = document.getElementById('resourcesPanel');
-        
-        if (toggleBtn && panel) {
-            toggleBtn.addEventListener('click', () => {
-                const isHidden = panel.style.display === 'none';
-                panel.style.display = isHidden ? 'flex' : 'none';
-                // 切换图标或状态
-                toggleBtn.classList.toggle('active', isHidden);
+    // 初始化 Tab 切换
+    initTabs() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 移除所有激活状态
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+
+                // 激活当前
+                tab.classList.add('active');
+                const targetId = tab.dataset.target;
+                const targetPane = document.getElementById(targetId);
+                if (targetPane) targetPane.classList.add('active');
             });
+        });
+    }
+
+    // 初始化资源面板交互 - 已废弃
+    initResourcePanel() {}
+
+    updatePathDisplay(id, text) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = text;
+            el.style.color = 'var(--accent)';
         }
     }
 
-    updatePathDisplay(id, text, type = 'file') {
-        const displayEl = document.getElementById(id);
-        if (displayEl) {
-            const icon = type === 'folder' ? '📁' : '📄';
-            displayEl.textContent = `${icon} ${text}`;
-            displayEl.style.display = 'block';
-        }
-    }
-
-    showResourceFeedback(path, type = 'file') {
-        const hintEl = document.getElementById('loadedResourceHint');
-        if (hintEl) {
-            const icon = type === 'folder' ? '📁' : ' 已加载';
-            hintEl.textContent = `${icon}: ${path}`;
-            hintEl.style.display = 'block';
-            
-            // 3秒后淡出
-            setTimeout(() => {
-                hintEl.style.opacity = '0';
-                setTimeout(() => { 
-                    hintEl.textContent = ''; 
-                    hintEl.style.opacity = '1';
-                }, 500);
-            }, 3000);
-        }
+    showResourceFeedback(text, type = 'file') {
+        const icon = type === 'folder' ? '📁' : '📄';
+        this.showNotification(`${icon} 已加载: ${text}`, 'success');
     }
 
     // 防抖函数工具
@@ -161,23 +156,12 @@ export class LEDLyricsPlayer {
         const controlPanel = document.querySelector('.control-panel');
 
         if (triggerZone && controlPanel) {
-            triggerZone.addEventListener('click', (e) => {
-                e.stopPropagation();
-                controlPanel.classList.toggle('active');
-                const isActive = controlPanel.classList.contains('active');
-                this.showNotification(isActive ? '控制台已锁定' : '控制台自动隐藏', 'info', 1500);
+            triggerZone.addEventListener('mouseenter', () => {
+                controlPanel.classList.add('active');
             });
 
-            // 点击控制台内部不关闭
-            controlPanel.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-
-            // 点击页面其他地方关闭控制台
-            document.addEventListener('click', () => {
-                if (controlPanel.classList.contains('active')) {
-                    controlPanel.classList.remove('active');
-                }
+            controlPanel.addEventListener('mouseleave', () => {
+                controlPanel.classList.remove('active');
             });
         }
     }
@@ -426,35 +410,42 @@ export class LEDLyricsPlayer {
 
         // 文件上传
         const lrcFile = getEl('lrcFile');
-        if (lrcFile) lrcFile.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            log('选择了', files.length, '个文件');
-            const text = `${files.length} 个歌词文件`;
-            this.updatePathDisplay('lrcPathDisplay', text, 'file');
-            this.showResourceFeedback(text, 'file');
-            this.loadLrcFiles(files);
-        });
+        const lrcFileBtn = getEl('lrcFileBtn');
+        if (lrcFile) {
+            lrcFile.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                log('选择了', files.length, '个文件');
+                this.updatePathDisplay('lrcPathDisplay', `${files.length} 个文件`);
+                this.loadLrcFiles(files);
+            });
+            if (lrcFileBtn) lrcFileBtn.addEventListener('click', () => lrcFile.click());
+        }
 
         const audioFile = getEl('audioFile');
-        if (audioFile) audioFile.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            log('选择了', files.length, '个音频文件');
-            const text = `${files.length} 个音频文件`;
-            this.updatePathDisplay('audioPathDisplay', text, 'file');
-            this.showResourceFeedback(text, 'file');
-            this.loadAudioFiles(files);
-        });
+        const audioFileBtn = getEl('audioFileBtn');
+        if (audioFile) {
+            audioFile.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                log('选择了', files.length, '个音频文件');
+                this.updatePathDisplay('audioPathDisplay', `${files.length} 个文件`);
+                this.loadAudioFiles(files);
+            });
+            if (audioFileBtn) audioFileBtn.addEventListener('click', () => audioFile.click());
+        }
 
         const backgroundFile = getEl('backgroundFile');
-        if (backgroundFile) backgroundFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                log('开始加载背景图片:', file.name);
-                this.updatePathDisplay('bgPathDisplay', file.name, 'file');
-                this.showResourceFeedback(file.name, 'file');
-                this.loadBackgroundImage(file);
-            }
-        });
+        const backgroundFileBtn = getEl('backgroundFileBtn');
+        if (backgroundFile) {
+            backgroundFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    log('开始加载背景图片:', file.name);
+                    this.updatePathDisplay('bgPathDisplay', file.name);
+                    this.loadBackgroundImage(file);
+                }
+            });
+            if (backgroundFileBtn) backgroundFileBtn.addEventListener('click', () => backgroundFile.click());
+        }
 
         // 文件夹选择
         const lrcFolderBtn = getEl('lrcFolderBtn');
@@ -469,8 +460,7 @@ export class LEDLyricsPlayer {
                 if (files.length > 0) {
                     const path = files[0].webkitRelativePath || '';
                     const folderName = path.split('/')[0] || '选中文件夹';
-                    this.updatePathDisplay('lrcPathDisplay', folderName, 'folder');
-                    this.showResourceFeedback(folderName, 'folder');
+                    this.updatePathDisplay('lrcPathDisplay', `文件夹: ${folderName}`);
                 }
                 await this.processFolderFiles(files, 'lyrics');
             });
@@ -488,8 +478,7 @@ export class LEDLyricsPlayer {
                 if (files.length > 0) {
                     const path = files[0].webkitRelativePath || '';
                     const folderName = path.split('/')[0] || '选中文件夹';
-                    this.updatePathDisplay('audioPathDisplay', folderName, 'folder');
-                    this.showResourceFeedback(folderName, 'folder');
+                    this.updatePathDisplay('audioPathDisplay', `文件夹: ${folderName}`);
                 }
                 await this.processFolderFiles(files, 'audio');
             });
@@ -603,7 +592,15 @@ export class LEDLyricsPlayer {
         }
 
         // 播放列表功能
-        const exportPlaylistBtn = getEl('exportPlaylist');
+        const playlistFile = getEl('playlistFile');
+        const importPlaylistBtn = getEl('importPlaylistBtn');
+        if (importPlaylistBtn && playlistFile) {
+            importPlaylistBtn.addEventListener('click', () => {
+                playlistFile.click();
+            });
+        }
+
+        const exportPlaylistBtn = getEl('exportPlaylistBtn');
         if (exportPlaylistBtn) exportPlaylistBtn.addEventListener('click', () => {
             this.exportPlaylist();
         });
@@ -612,14 +609,6 @@ export class LEDLyricsPlayer {
         if (sortPlaylistBtn) sortPlaylistBtn.addEventListener('click', () => {
             this.sortPlaylist();
         });
-
-        const importPlaylistBtn = getEl('importPlaylist');
-        const playlistFile = getEl('playlistFile');
-        if (importPlaylistBtn && playlistFile) {
-            importPlaylistBtn.addEventListener('click', () => {
-                playlistFile.click();
-            });
-        }
 
         const clearPlaylistBtn = getEl('clearPlaylist');
         if (clearPlaylistBtn) clearPlaylistBtn.addEventListener('click', () => {
@@ -861,58 +850,45 @@ export class LEDLyricsPlayer {
     updateAudioMode() {
         const syncControls = document.getElementById('syncControls');
 
-    if (this.currentSongIndex >= 0 && this.currentSongIndex < this.songs.length) {
-        const currentSong = this.songs[this.currentSongIndex];
-        const songMode = this.getSongMode(currentSong);
+        if (this.currentSongIndex >= 0 && this.currentSongIndex < this.songs.length) {
+            const currentSong = this.songs[this.currentSongIndex];
+            const songMode = this.getSongMode(currentSong);
 
-        switch (songMode) {
-            case 'sync':
-                if (this.currentSongStatus) {
-                    this.currentSongStatus.textContent = '同步模式 (音频+歌词)';
-                }
-                this.updateModeToggleButton();
-                if (syncControls) {
-                    syncControls.style.display = 'block';
-                }
-                this.updateOffsetDisplay();
-                break;
-            case 'audio':
-                if (this.currentSongStatus) {
-                    this.currentSongStatus.textContent = '纯音频模式';
-                }
-                this.updateModeToggleButton();
-                if (syncControls) {
-                    syncControls.style.display = 'none';
-                }
-                break;
-            case 'lyrics':
-                if (this.currentSongStatus) {
-                    this.currentSongStatus.textContent = '纯歌词模式 (手动控制)';
-                }
-                this.updateModeToggleButton();
-                if (syncControls) {
-                    syncControls.style.display = 'none';
-                }
-                break;
-            default:
-                if (this.currentSongStatus) {
-                    this.currentSongStatus.textContent = this.isPlaying ? '播放中' : '已暂停';
-                }
-                this.updateModeToggleButton();
-                if (syncControls) {
-                    syncControls.style.display = 'none';
-                }
-        }
-    } else {
-        if (this.currentSongStatus) {
-            this.currentSongStatus.textContent = '准备播放';
-        }
-        this.updateModeToggleButton();
-        if (syncControls) {
-            syncControls.style.display = 'none';
+            switch (songMode) {
+                case 'sync':
+                    if (this.currentSongStatus) this.currentSongStatus.textContent = 'SYNC';
+                    if (this.currentSongStatus) this.currentSongStatus.className = 'status-tag status-sync';
+                    this.updateModeToggleButton();
+                    if (syncControls) syncControls.style.display = 'block';
+                    this.updateOffsetDisplay();
+                    break;
+                case 'audio':
+                    if (this.currentSongStatus) this.currentSongStatus.textContent = 'INST';
+                    if (this.currentSongStatus) this.currentSongStatus.className = 'status-tag status-audio';
+                    this.updateModeToggleButton();
+                    if (syncControls) syncControls.style.display = 'none';
+                    break;
+                case 'lyrics':
+                    if (this.currentSongStatus) this.currentSongStatus.textContent = 'LIVE';
+                    if (this.currentSongStatus) this.currentSongStatus.className = 'status-tag status-live';
+                    this.updateModeToggleButton();
+                    if (syncControls) syncControls.style.display = 'none';
+                    break;
+                default:
+                    if (this.currentSongStatus) this.currentSongStatus.textContent = this.isPlaying ? 'PLAY' : 'PAUSE';
+                    if (this.currentSongStatus) this.currentSongStatus.className = 'status-tag';
+                    this.updateModeToggleButton();
+                    if (syncControls) syncControls.style.display = 'none';
+            }
+        } else {
+            if (this.currentSongStatus) {
+                this.currentSongStatus.textContent = 'READY';
+                this.currentSongStatus.className = 'status-tag';
+            }
+            this.updateModeToggleButton();
+            if (syncControls) syncControls.style.display = 'none';
         }
     }
-}
 
     ensureAudioElement(song) {
     if (!song || !song.audioFile || song.audioElement) {
@@ -2211,48 +2187,57 @@ cleanup() {
     log('资源清理完成');
 }
 
-// 通知系统
-showNotification(message, type = 'info', duration = 3000) {
-    try {
-        const container = document.getElementById('notificationContainer');
-        if (!container) {
-            console.error('通知容器不存在');
-            return;
+    // 通知系统 (集成到控制台顶部)
+    showNotification(message, type = 'info') {
+        const statusBadge = document.getElementById('loadedResourceHint');
+        if (statusBadge) {
+            statusBadge.textContent = message;
+            statusBadge.className = 'status-badge highlight';
+            
+            // 根据类型设置颜色 (可选)
+            if (type === 'error') statusBadge.style.backgroundColor = 'var(--danger)';
+            else if (type === 'success') statusBadge.style.backgroundColor = 'var(--success)';
+            else statusBadge.style.backgroundColor = '#333';
+
+            // 3秒后恢复
+            if (this.statusTimer) clearTimeout(this.statusTimer);
+            this.statusTimer = setTimeout(() => {
+                statusBadge.classList.remove('highlight');
+                statusBadge.style.backgroundColor = '#333';
+                statusBadge.textContent = '准备就绪';
+            }, 3000);
         }
-
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-
-        container.appendChild(notification);
-
-        // 自动移除
-        const timerId = setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, duration);
-        this.addTimer(timerId);
-
-        // 点击关闭
-        notification.addEventListener('click', () => {
-            this.clearTimer(timerId);
-            if (notification.parentNode) {
-                notification.style.animation = 'fadeOut 0.2s ease forwards';
-                const fadeTimerId = setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 200);
-                this.addTimer(fadeTimerId);
-            }
-        });
-    } catch (error) {
-        console.error('显示通知时出错:', error);
-        // 降级处理：直接在控制台输出
         log(`[${type.toUpperCase()}] ${message}`);
     }
-}
+
+    // 自定义确认弹窗
+    showCustomConfirm(message, onConfirm) {
+        const modal = document.getElementById('customModal');
+        const msgEl = document.getElementById('modalMessage');
+        const confirmBtn = document.getElementById('modalConfirm');
+        const cancelBtn = document.getElementById('modalCancel');
+
+        if (!modal || !msgEl || !confirmBtn || !cancelBtn) return;
+
+        msgEl.textContent = message;
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+
+        const cleanup = () => {
+            modal.style.display = 'none';
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+        };
+
+        confirmBtn.onclick = () => {
+            cleanup();
+            onConfirm();
+        };
+
+        cancelBtn.onclick = () => {
+            cleanup();
+        };
+    }
 
 updateProgress() {
     if (!this.progressBar || !this.currentTimeSpan || !this.totalTimeSpan) {
@@ -2522,38 +2507,35 @@ importPlaylist(file) {
     reader.readAsText(file, 'UTF-8');
 }
 
-clearPlaylist(force = false) {
-    if (this.songs.length === 0) {
-        if (!force) this.showNotification('播放列表已经为空', 'info');
-        return;
-    }
+    clearPlaylist() {
+        if (this.songs.length === 0) {
+            this.showNotification('播放列表已经为空', 'info');
+            return;
+        }
 
-    if (force || confirm(`确定要清空所有 ${this.songs.length} 首歌曲吗？`)) {
-        this.pause();
-        // 清理所有歌曲的音频资源
-        this.songs.forEach(song => {
-            if (song.audioElement) {
-                this.disposeAudioElement(song);
-            }
+        this.showCustomConfirm(`确定要清空所有 ${this.songs.length} 首歌曲吗？`, () => {
+            this.pause();
+            // 清理所有歌曲的音频资源
+            this.songs.forEach(song => {
+                if (song.audioElement) {
+                    this.disposeAudioElement(song);
+                }
+            });
+
+            this.songs = [];
+            this.currentSongIndex = -1;
+            this.updatePlaylist();
+            this.updateStatusIndicator();
+            this.showLyrics('请上传LRC歌词文件', '开始你的演出');
+            if (this.songInfo) this.songInfo.style.display = 'none';
+            if (this.currentSongInfo) this.currentSongInfo.style.display = 'none';
+            if (this.playButton) this.playButton.disabled = true;
+            if (this.prevButton) this.prevButton.disabled = true;
+            if (this.nextButton) this.nextButton.disabled = true;
+            
+            this.showNotification('播放列表已清空', 'success');
         });
-
-        this.songs = [];
-        this.currentSongIndex = -1;
-        this.updatePlaylist();
-        this.updateStatusIndicator();
-        this.showLyrics('请上传LRC歌词文件', '开始你的演出');
-        this.songInfo.style.display = 'none';
-        this.currentSongInfo.style.display = 'none';
-        this.playButton.disabled = true;
-        if (this.prevButton) {
-            this.prevButton.disabled = true;
-        }
-        if (this.nextButton) {
-            this.nextButton.disabled = true;
-        }
-        if (!force) this.showNotification('播放列表已清空', 'success');
     }
-}
 // 同步校准功能
 adjustOffset(delta) {
     if (!this.audioMode) {

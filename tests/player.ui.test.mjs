@@ -24,7 +24,7 @@ await test('updateAudioMode does not throw when syncControls is missing', () => 
   assert.doesNotThrow(() => {
     player.updateAudioMode();
   });
-  assert.equal(player.currentSongStatus.textContent, '纯歌词模式 (手动控制)');
+  assert.equal(player.currentSongStatus.textContent, 'LIVE');
 });
 
 await test('updateAudioMode does not throw when status element is missing', () => {
